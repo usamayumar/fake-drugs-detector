@@ -1,28 +1,35 @@
 import streamlit as st
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing import image
 import numpy as np
 from PIL import Image
-
-# Load model
-model = load_model('model1.h5')
+import tempfile
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing import image as keras_image
 
 st.title("Fake Drug Detection App")
-st.write("Upload an image of the drug to detect if it's real or fake.")
+st.write("Upload the trained model (`model1.h5`) and an image of the drug to detect if it's real or fake.")
 
-uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+# Upload model
+model_file = st.file_uploader("Upload your model (.h5)", type=["h5"])
 
-if uploaded_file is not None:
-    img = Image.open(uploaded_file)
-    st.image(img, caption='Uploaded Image.', use_column_width=True)
+if model_file is not None:
+    with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+        tmp_file.write(model_file.read())
+        model = load_model(tmp_file.name)
 
-    img = img.resize((150,150))
-    img_array = image.img_to_array(img)
-    img_array = np.expand_dims(img_array, axis=0) / 255.0
+    # Upload image
+    uploaded_file = st.file_uploader("Upload an image...", type=["jpg", "jpeg", "png"])
 
-    prediction = model.predict(img_array)
+    if uploaded_file is not None:
+        img = Image.open(uploaded_file)
+        st.image(img, caption='Uploaded Image.', use_column_width=True)
 
-    if prediction[0][0] > 0.5:
-        st.error("⚠️ Likely a **FAKE** drug.")
-    else:
-        st.success("✅ Likely a **REAL** drug.")
+        img = img.resize((150,150))
+        img_array = keras_image.img_to_array(img)
+        img_array = np.expand_dims(img_array, axis=0) / 255.0
+
+        prediction = model.predict(img_array)
+
+        if prediction[0][0] > 0.5:
+            st.error("⚠️ Likely a **FAKE** drug.")
+        else:
+            st.success("✅ Likely a **REAL** drug.")
