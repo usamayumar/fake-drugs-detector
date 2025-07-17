@@ -1,6 +1,5 @@
-python_version < 3.11
 streamlit==1.32.2
-tensorflow-cpu==2.10.0
+tensorflow-cpu==2.13.0
 rich==14.0.0
 pygments==2.19.2
 mdurl==0.1.2
